@@ -106,10 +106,6 @@ RCT_EXPORT_MODULE();
 }
 
 - (void)audioSessionInterruptionNotification:(NSNotification*)notification {
-  if(!hasListeners){
-    return;
-  }
-
   if ([[notification.userInfo valueForKey:AVAudioSessionInterruptionTypeKey] isEqualToNumber:[NSNumber numberWithInt:AVAudioSessionInterruptionTypeBegan]]) {
     [self sendEventWithName:EVENT_INTERRUPTION_BEGAN body:@{}];
     if(resumeOnInterrupt){
