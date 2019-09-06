@@ -1,12 +1,8 @@
 "use strict";
 
-import React from "react";
-
-import ReactNative, {
+import {
   NativeModules,
   NativeEventEmitter,
-  NativeAppEventEmitter,
-  DeviceEventEmitter,
   PermissionsAndroid,
   Platform
 } from "react-native";
@@ -38,6 +34,17 @@ var AudioRecorder = {
       }
     );
 
+    if (this.interruptionBeganSubscription)
+      this.interruptionBeganSubscription.remove();
+    this.interruptionBeganSubscription = AudioRecorderManagerEmitter.addListener(
+      "recordingInterruptionBegan",
+      data => {
+        if (this.onInterruptionBegan) {
+          this.onInterruptionBegan(data);
+        }
+      }
+    );
+
     var defaultOptions = {
       SampleRate: 44100.0,
       Channels: 2,
@@ -55,7 +62,7 @@ var AudioRecorder = {
     var recordingOptions = { ...defaultOptions, ...options };
 
     if (Platform.OS === "ios") {
-      AudioRecorderManager.prepareRecordingAtPath(
+      return AudioRecorderManager.prepareRecordingAtPath(
         path,
         recordingOptions.SampleRate,
         recordingOptions.Channels,
@@ -101,6 +108,8 @@ var AudioRecorder = {
   removeListeners: function() {
     if (this.progressSubscription) this.progressSubscription.remove();
     if (this.finishedSubscription) this.finishedSubscription.remove();
+    if (this.interruptionBeganSubscription)
+      this.interruptionBeganSubscription.remove();
   }
 };
 

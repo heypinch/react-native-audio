@@ -127,7 +127,9 @@ RCT_EXPORT_METHOD(prepareRecordingAtPath:(NSString *)path
                   quality:(nonnull NSNumber *)quality 
                   encoding:(nonnull NSNumber *)encoding 
                   meteringEnabled:(BOOL)meteringEnabled 
-                  shouldResume:(BOOL)shouldResume)
+                  shouldResume:(BOOL)shouldResume
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 {
   // create parent dirs if necessary
   NSString *filePathAndDirectory = [path stringByDeletingLastPathComponent];
@@ -140,6 +142,7 @@ RCT_EXPORT_METHOD(prepareRecordingAtPath:(NSString *)path
                           error:&error])
   {
     NSLog(@"Create directory error: %@", error);
+    return reject(@"create_directory_failed", @"Could not create parent audio directory.", error);
   }  
 
   audioFileURL = [NSURL fileURLWithPath:path];
@@ -172,6 +175,7 @@ RCT_EXPORT_METHOD(prepareRecordingAtPath:(NSString *)path
     [recordSession setPreferredInput:preferredPort error:nil];
   }else{
     NSLog(@"No input port is available");
+    return reject(@"no_input_port_available", @"No available input port found.", Nil);
   }
 
   audioRecorder = [[AVAudioRecorder alloc]
@@ -190,9 +194,11 @@ RCT_EXPORT_METHOD(prepareRecordingAtPath:(NSString *)path
   if (error) {
     // TODO: dispatch error over the bridge
     NSLog(@"error: %@", [error localizedDescription]);
-  } else {
-    [audioRecorder prepareToRecord];
+    return reject(@"initWithURL_failed", @"Could not initialise Audio Recorder.", error);
   }
+  
+  [audioRecorder prepareToRecord];
+  resolve(@YES);
 }
 
 - (void)startProgressTimer {
@@ -242,7 +248,9 @@ RCT_EXPORT_METHOD(resumeRecording)
   if (!audioRecorder.isRecording) {
     [audioRecorder record];
   }
-  [self startProgressTimer];
+  if (![progressTimer isValid]){
+    [self startProgressTimer];
+  }
 }
 
 RCT_EXPORT_METHOD(checkAuthorizationStatus:(RCTPromiseResolveBlock)resolve reject:(__unused RCTPromiseRejectBlock)reject)
