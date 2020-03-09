@@ -99,8 +99,8 @@ RCT_EXPORT_MODULE();
 }
 
 - (void)audioRecorderEncodeErrorDidOccur:(AVAudioRecorder *)recorder error:(NSError *)error {
+  // this error should be passed through to the didFinishRecording event
   if (error) {
-    // TODO: dispatch error over the bridge
     NSLog(@"error: %@", [error localizedDescription]);
   }
 }
@@ -192,13 +192,15 @@ RCT_EXPORT_METHOD(prepareRecordingAtPath:(NSString *)path
   audioRecorder.delegate = self;
 
   if (error) {
-    // TODO: dispatch error over the bridge
     NSLog(@"error: %@", [error localizedDescription]);
     return reject(@"initWithURL_failed", @"Could not initialise Audio Recorder.", error);
   }
   
-  [audioRecorder prepareToRecord];
-  resolve(@YES);
+  if([audioRecorder prepareToRecord]){
+    resolve(@YES);
+  }else{
+    reject(@"prepareToRecord_failed", @"Failed to run prepareToRecord.", Nil);
+  }  
 }
 
 - (void)startProgressTimer {
@@ -215,11 +217,18 @@ RCT_EXPORT_METHOD(prepareRecordingAtPath:(NSString *)path
   [progressTimer invalidate];
 }
 
-RCT_EXPORT_METHOD(startRecording)
+RCT_EXPORT_METHOD(startRecording:(RCTPromiseResolveBlock)resolve reject:(__unused RCTPromiseRejectBlock)reject)
 {
+  NSError *error=nil;
   [self startProgressTimer];
-  [recordSession setActive:YES error:nil];
-  [audioRecorder record];
+  if(![recordSession setActive:YES error:&error]){
+    return reject(@"setActive_failed", @"Failed to run setActive inside startRecording.", error);
+  }
+  if([audioRecorder record]){
+    resolve(@YES);
+  }else{
+    reject(@"record_failed", @"Failed to run record inside startRecording.", Nil);
+  }
 }
 
 RCT_EXPORT_METHOD(stopRecording)
