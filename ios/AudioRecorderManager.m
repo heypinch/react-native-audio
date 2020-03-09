@@ -199,7 +199,7 @@ RCT_EXPORT_METHOD(prepareRecordingAtPath:(NSString *)path
   if([audioRecorder prepareToRecord]){
     resolve(@YES);
   }else{
-    reject(@"prepareToRecord_failed", @"Failed to run prepareToRecord.")
+    reject(@"prepareToRecord_failed", @"Failed to run prepareToRecord.", Nil);
   }  
 }
 
@@ -222,12 +222,12 @@ RCT_EXPORT_METHOD(startRecording:(RCTPromiseResolveBlock)resolve reject:(__unuse
   NSError *error=nil;
   [self startProgressTimer];
   if(![recordSession setActive:YES error:&error]){
-    return reject(@"setActive_failed", @"Failed to run setActive inside startRecording.", error)
+    return reject(@"setActive_failed", @"Failed to run setActive inside startRecording.", error);
   }
   if([audioRecorder record]){
-    resolve(@YES)
+    resolve(@YES);
   }else{
-    reject(@"record_failed", @"Failed to run record inside startRecording.")
+    reject(@"record_failed", @"Failed to run record inside startRecording.", Nil);
   }
 }
 
