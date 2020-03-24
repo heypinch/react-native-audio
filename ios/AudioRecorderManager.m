@@ -204,7 +204,7 @@ RCT_EXPORT_METHOD(prepareRecordingAtPath:(NSString *)path
 }
 
 - (void)startProgressTimer {
-  progressTimer = [NSTimer timerWithTimeInterval:0.5F 
+  progressTimer = [NSTimer timerWithTimeInterval:0.1F 
                            target:self 
                            selector:@selector(progressTick:) 
                            userInfo:nil 
